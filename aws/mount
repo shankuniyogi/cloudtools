@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo off
+@echo off
 
 read -p "Enter credential name: " CREDENTIAL_NAME
 
