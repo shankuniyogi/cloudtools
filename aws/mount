@@ -93,3 +93,5 @@ aws iam update-assume-role-policy \
             }
         } ]
     }'
+
+echo Created storage credential with ARN: arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
