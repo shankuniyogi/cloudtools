@@ -1,21 +1,16 @@
 #!/bin/sh
 
-read -p "Enter credential name: " CREDENTIAL_NAME
+CREDENTIAL_NAME=$1
+CREDENTIAL_ID=$2
 
-echo $CREDENTIAL_NAME
+echo Databricks S3 Mount Utility
 
-read -p "Enter credential ID: " CREDENTIAL_ID
-
-echo $CREDENTIAL_ID
-
-read -p "Storage bucket: " STORAGE_BUCKET
-
-echo $STORAGE_BUCKET
-
+read -p "Enter the name of the AWS storage bucket to mount: " STORAGE_BUCKET
 
 ACCOUNT_ID=$(aws sts get-caller-identity \
     --output text --query 'Account')
 
+echo Creating role ${CREDENTIAL_NAME}role...
 aws iam create-role \
     --role-name ${CREDENTIAL_NAME}role \
     --assume-role-policy-document '{
@@ -36,6 +31,7 @@ aws iam create-role \
         } ]
     }'
 
+echo Creating policy ${CREDENTIAL_NAME}policy...
 aws iam create-policy \
     --policy-name ${CREDENTIAL_NAME}policy \
     --policy-document '{
@@ -67,10 +63,14 @@ aws iam create-policy \
         ]
     }'
 
+echo Attaching policy to role...
 aws iam attach-role-policy \
     --role-name ${CREDENTIAL_NAME}role \
     --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${CREDENTIAL_NAME}policy
 
+sleep 3
+
+echo Updating assume role policy...
 aws iam update-assume-role-policy \
     --role-name ${CREDENTIAL_NAME}role \
     --policy-document '{
@@ -92,4 +92,6 @@ aws iam update-assume-role-policy \
         } ]
     }'
 
-echo Created storage credential with ARN: arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
+echo Created AWS role and policy successfully.
+echo Return to Databricks, and enter this ARN: 
+echo arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
