@@ -103,6 +103,6 @@ echo Created AWS role and policy successfully.
 echo
 echo Return to Databricks, and enter the following to finish mounting the storage location:
 echo
-echo URL: s3://${STORAGE_BUCKET}
+echo 'URL:            s3://'${STORAGE_BUCKET}
 echo 'IAM Role (ARN): arn:aws:iam::'${ACCOUNT_ID}':role/'${MOUNT_NAME}'role'
 echo
