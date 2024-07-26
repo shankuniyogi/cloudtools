@@ -98,3 +98,4 @@ echo Created AWS role and policy successfully.
 echo Return to Databricks, and enter the following in the ARN field: 
 echo
 echo arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
+echo
