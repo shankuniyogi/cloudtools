@@ -1,0 +1,95 @@
+#!/bin/sh
+
+echo off
+
+read -p "Enter credential name: " CREDENTIAL_NAME
+
+echo $CREDENTIAL_NAME
+
+read -p "Enter credential ID: " CREDENTIAL_ID
+
+echo $CREDENTIAL_ID
+
+read -p "Storage bucket: " STORAGE_BUCKET
+
+echo $STORAGE_BUCKET
+
+
+ACCOUNT_ID=$(aws sts get-caller-identity \
+    --output text --query 'Account')
+
+aws iam create-role \
+    --role-name ${CREDENTIAL_NAME}role \
+    --assume-role-policy-document '{
+        "Version": "2012-10-17",
+        "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL"
+                ]
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "StringEquals": {
+                    "sts:ExternalId": "'${CREDENTIAL_ID}'"
+                }
+            }
+        } ]
+    }'
+
+aws iam create-policy \
+    --policy-name ${CREDENTIAL_NAME}policy \
+    --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::'${STORAGE_BUCKET}'/*",
+                "arn:aws:s3:::'${STORAGE_BUCKET}'"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": [
+                "arn:aws:iam:::role/'${CREDENTIAL_NAME}'role"
+            ],
+            "Effect": "Allow"
+        }
+        ]
+    }'
+
+aws iam attach-role-policy \
+    --role-name ${CREDENTIAL_NAME}role \
+    --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${CREDENTIAL_NAME}policy
+
+aws iam update-assume-role-policy \
+    --role-name ${CREDENTIAL_NAME}role \
+    --policy-document '{
+        "Version": "2012-10-17",
+        "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL",
+                     "arn:aws:iam::'${ACCOUNT_ID}':role/'${CREDENTIAL_NAME}'role"
+                ]
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "StringEquals": {
+                    "sts:ExternalId": "'${CREDENTIAL_ID}'"
+                }
+            }
+        } ]
+    }'
