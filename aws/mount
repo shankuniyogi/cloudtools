@@ -3,11 +3,11 @@
 MOUNT_NAME=$1
 CREDENTIAL_ID=$2
 
+echo
 echo Databricks S3 Mount Utility
 echo 
-echo This tool will create an AWS role and policy to enable
-echo Databricks to securely access an S3 storage bucket as
-echo a Unity Catalog external location.
+echo This tool will create an AWS role and policy to enable Databricks to securely 
+echo access an S3 storage bucket as a Unity Catalog external location.
 echo
 
 read -p "Enter the name of the AWS storage bucket to mount: " STORAGE_BUCKET
@@ -101,8 +101,7 @@ UPDATE_ASSUME_ROLE_POLICY_RESULT=$(aws iam update-assume-role-policy \
 
 echo Created AWS role and policy successfully.
 echo
-echo Return to Databricks, and enter the following to finish 
-echo mounting the storage location:
+echo Return to Databricks, and enter the following to finish mounting the storage location:
 echo
 echo URL: s3://${STORAGE_BUCKET}
 echo IAM Role (ARN): arn:aws:iam::${ACCOUNT_ID}:role/${MOUNT_NAME}role
