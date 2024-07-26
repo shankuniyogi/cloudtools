@@ -12,6 +12,7 @@ ACCOUNT_ID=$(aws sts get-caller-identity \
 
 echo Creating role ${CREDENTIAL_NAME}role...
 CREATE_ROLE_RESULT=$(aws iam create-role \
+    --output text --query 'Role.RoleId' \
     --role-name ${CREDENTIAL_NAME}role \
     --assume-role-policy-document '{
         "Version": "2012-10-17",
@@ -33,6 +34,7 @@ CREATE_ROLE_RESULT=$(aws iam create-role \
 
 echo Creating policy ${CREDENTIAL_NAME}policy...
 CREATE_POLICY_RESULT=$(aws iam create-policy \
+    --output text --query 'Policy.PolicyId' \
     --policy-name ${CREDENTIAL_NAME}policy \
     --policy-document '{
     "Version": "2012-10-17",
