@@ -11,7 +11,7 @@ ACCOUNT_ID=$(aws sts get-caller-identity \
     --output text --query 'Account')
 
 echo Creating role ${CREDENTIAL_NAME}role...
-aws iam create-role \
+CREATE_ROLE_RESULT=$(aws iam create-role \
     --role-name ${CREDENTIAL_NAME}role \
     --assume-role-policy-document '{
         "Version": "2012-10-17",
@@ -29,10 +29,10 @@ aws iam create-role \
                 }
             }
         } ]
-    }'
+    }') 
 
 echo Creating policy ${CREDENTIAL_NAME}policy...
-aws iam create-policy \
+CREATE_POLICY_RESULT=$(aws iam create-policy \
     --policy-name ${CREDENTIAL_NAME}policy \
     --policy-document '{
     "Version": "2012-10-17",
@@ -61,17 +61,17 @@ aws iam create-policy \
             "Effect": "Allow"
         }
         ]
-    }'
+    }')
 
 echo Attaching policy to role...
-aws iam attach-role-policy \
+CREATE_ATTACH_ROLE_POLICY_RESULT=$(aws iam attach-role-policy \
     --role-name ${CREDENTIAL_NAME}role \
-    --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${CREDENTIAL_NAME}policy
+    --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${CREDENTIAL_NAME}policy)
 
 sleep 3
 
 echo Updating assume role policy...
-aws iam update-assume-role-policy \
+UPDATE_ASSUME_ROLE_POLICY_RESULT=$(aws iam update-assume-role-policy \
     --role-name ${CREDENTIAL_NAME}role \
     --policy-document '{
         "Version": "2012-10-17",
@@ -90,8 +90,9 @@ aws iam update-assume-role-policy \
                 }
             }
         } ]
-    }'
+    }')
 
 echo Created AWS role and policy successfully.
-echo Return to Databricks, and enter this ARN: 
+echo Return to Databricks, and enter the following in the ARN field: 
+echo
 echo arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
