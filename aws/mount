@@ -1,19 +1,24 @@
 #!/bin/sh
 
-CREDENTIAL_NAME=$1
+MOUNT_NAME=$1
 CREDENTIAL_ID=$2
 
 echo Databricks S3 Mount Utility
+echo 
+echo This tool will create an AWS role and policy to enable
+echo Databricks to securely access an S3 storage bucket as
+echo a Unity Catalog external location.
+echo
 
 read -p "Enter the name of the AWS storage bucket to mount: " STORAGE_BUCKET
 
 ACCOUNT_ID=$(aws sts get-caller-identity \
     --output text --query 'Account')
 
-echo Creating role ${CREDENTIAL_NAME}role...
+echo Creating role ${MOUNT_NAME}role...
 CREATE_ROLE_RESULT=$(aws iam create-role \
     --output text --query 'Role.RoleId' \
-    --role-name ${CREDENTIAL_NAME}role \
+    --role-name ${MOUNT_NAME}role \
     --assume-role-policy-document '{
         "Version": "2012-10-17",
         "Statement": [ {
@@ -32,10 +37,10 @@ CREATE_ROLE_RESULT=$(aws iam create-role \
         } ]
     }') 
 
-echo Creating policy ${CREDENTIAL_NAME}policy...
+echo Creating policy ${MOUNT_NAME}policy...
 CREATE_POLICY_RESULT=$(aws iam create-policy \
     --output text --query 'Policy.PolicyId' \
-    --policy-name ${CREDENTIAL_NAME}policy \
+    --policy-name ${MOUNT_NAME}policy \
     --policy-document '{
     "Version": "2012-10-17",
     "Statement": [
@@ -58,7 +63,7 @@ CREATE_POLICY_RESULT=$(aws iam create-policy \
                 "sts:AssumeRole"
             ],
             "Resource": [
-                "arn:aws:iam:::role/'${CREDENTIAL_NAME}'role"
+                "arn:aws:iam:::role/'${MOUNT_NAME}'role"
             ],
             "Effect": "Allow"
         }
@@ -67,14 +72,14 @@ CREATE_POLICY_RESULT=$(aws iam create-policy \
 
 echo Attaching policy to role...
 CREATE_ATTACH_ROLE_POLICY_RESULT=$(aws iam attach-role-policy \
-    --role-name ${CREDENTIAL_NAME}role \
-    --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${CREDENTIAL_NAME}policy)
+    --role-name ${MOUNT_NAME}role \
+    --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${MOUNT_NAME}policy)
 
 sleep 3
 
 echo Updating assume role policy...
 UPDATE_ASSUME_ROLE_POLICY_RESULT=$(aws iam update-assume-role-policy \
-    --role-name ${CREDENTIAL_NAME}role \
+    --role-name ${MOUNT_NAME}role \
     --policy-document '{
         "Version": "2012-10-17",
         "Statement": [ {
@@ -82,7 +87,7 @@ UPDATE_ASSUME_ROLE_POLICY_RESULT=$(aws iam update-assume-role-policy \
             "Principal": {
                 "AWS": [
                     "arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL",
-                     "arn:aws:iam::'${ACCOUNT_ID}':role/'${CREDENTIAL_NAME}'role"
+                     "arn:aws:iam::'${ACCOUNT_ID}':role/'${MOUNT_NAME}'role"
                 ]
             },
             "Action": "sts:AssumeRole",
@@ -95,7 +100,10 @@ UPDATE_ASSUME_ROLE_POLICY_RESULT=$(aws iam update-assume-role-policy \
     }')
 
 echo Created AWS role and policy successfully.
-echo Return to Databricks, and enter the following in the ARN field: 
 echo
-echo arn:aws:iam::${ACCOUNT_ID}:role/${CREDENTIAL_NAME}role
+echo Return to Databricks, and enter the following to finish 
+echo mounting the storage location:
+echo
+echo URL: s3://${STORAGE_BUCKET}
+echo IAM Role (ARN): arn:aws:iam::${ACCOUNT_ID}:role/${MOUNT_NAME}role
 echo
